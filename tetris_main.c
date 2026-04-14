@@ -19,6 +19,23 @@ typedef enum {
 } Gamestate;
 
 typedef enum {
+    Neutral,
+    Rotated_once,
+    Rotated_twice,
+    Rotated_thrice
+} Tetrimino_State;
+
+typedef enum {
+    left_l_shape,
+    right_l_shape,
+    square,
+    I_block,
+    left_z_block,
+    right_z_block,
+    t_shape
+} Shape;
+
+typedef enum {
     BEGINNING = 1,
     END = 10
 }Gravity;
@@ -30,8 +47,11 @@ typedef struct {            // board width is 16 but im only using 10 ig
 }Board;
 
 typedef struct {
-    int height;            // where the top part of the tetrimino is 
+    int height_bottom;            // where the top part of the tetrimino is
+    int left_side;
+    int right_side; 
     uint16_t bitmask[4];   // basic idea is i will have the 4 different state of the tetrimino next to eacah other consequentually
+    Tetrimino_State tetrimino_state;
 } Tetrimino;
 
 typedef struct {
@@ -41,6 +61,11 @@ typedef struct {
     Board* moving_board;
     Tetrimino* moving_tetrimino;
 } Tetris; 
+
+static uint16_t* all_shape_Tetrimino_State_Map[t_shape + 1][Rotated_thrice + 1] { // key is the tetrimino_state(int) and the shape (int), the value is the bitmap
+
+} 
+
 
 void print_board(Tetris*);
 Tetris* init_game();
@@ -91,10 +116,16 @@ Board* init_board(int height) {
 Tetrimino* init_tetrimino() {
     Tetrimino* tetrimino = malloc(sizeof(Tetrimino));
 
-    tetrimino -> bitmask[0] |= (3 << 5);
-    tetrimino -> bitmask[1] |= (3 << 5);
+    tetrimino -> bitmask[0] |= (3 << 1);
+    tetrimino -> bitmask[1] |= (3 << 1);
     tetrimino -> bitmask[2] = 0;
     tetrimino -> bitmask[3] = 0;
+
+    tetrimino -> height_bottom = 1;
+    tetrimino -> left_side = 6;
+    tetrimino -> right_side = 5; 
+
+    tetrimino -> tetrimino_state = Neutral;
 
     return tetrimino;
 }
@@ -137,8 +168,13 @@ void print_board(Tetris* tetris) {
     return;
 }
 
-bool collision(Tetris*) {
+bool collision(Tetris* tetris) {
+    int h = tetris -> locked_board -> height;
+    int w = tetris -> locked_board -> width;
+    uint16_t* board_arr = tetris -> locked_board -> arr;
+    Tetrimino* moving_tetrimino = tetris -> moving_tetrimino
 
+    if (moving_tetrimino -> bitmask[0])
 
     return true;
 }
