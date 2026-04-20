@@ -47,7 +47,7 @@ typedef struct {            // board width is 16 but im only using 10 ig
 }Board;
 
 typedef struct {
-    int height_bottom;            // where the top part of the tetrimino is
+    int height_top;            // where the top part of the tetrimino is
     int left_side;
     int right_side; 
     uint16_t bitmask[4];   // basic idea is i will have the 4 different state of the tetrimino next to eacah other consequentually
@@ -62,9 +62,50 @@ typedef struct {
     Tetrimino* moving_tetrimino;
 } Tetris; 
 
-static uint16_t* all_shape_Tetrimino_State_Map[t_shape + 1][Rotated_thrice + 1] { // key is the tetrimino_state(int) and the shape (int), the value is the bitmap
-
-} 
+static const uint16_t all_shape_Tetrimino_State_Map[t_shape + 1][4] = { // key is the tetrimino_state(int), the value is the bitmap, later from rotation we can decide which part of the tetrimino bitmap we can use
+    {       // left_l_shape
+        4,                    // first _row of bitmask
+        30244,                // second _row of bitmask
+        17126,                // ...
+        512               
+    },
+    {       // right_l_shape
+        2,
+        18146,
+        29734,
+        1024
+    },      
+    {       // square
+        26214,
+        26214,
+        0,
+        0
+    },      
+    {       // I_block
+        514,
+        62194,
+        514,
+        514
+    },
+    {       // left_z_block
+        16448,
+        25443,
+        9766,
+        0
+    }, 
+    {       // right_z_block,
+        8224,
+        27756,
+        17990,
+        0
+    },
+    {       // t_shape
+        0,
+        18210,
+        25191,
+        16416
+    }
+};
 
 
 void print_board(Tetris*);
@@ -72,7 +113,7 @@ Tetris* init_game();
 Board* init_board(int);
 void game_loop(Tetris*);
 Tetrimino* init_tetrimino();
-bool collision(Tetris*);
+bool collision(const Tetris*, int);
 
 int main () {
 
@@ -114,14 +155,14 @@ Board* init_board(int height) {
 }
 
 Tetrimino* init_tetrimino() {
-    Tetrimino* tetrimino = malloc(sizeof(Tetrimino));
+    Tetrimino* tetrimino = calloc(1, sizeof(Tetrimino));
 
     tetrimino -> bitmask[0] |= (3 << 1);
     tetrimino -> bitmask[1] |= (3 << 1);
     tetrimino -> bitmask[2] = 0;
     tetrimino -> bitmask[3] = 0;
 
-    tetrimino -> height_bottom = 1;
+    tetrimino -> height_top = 0;
     tetrimino -> left_side = 6;
     tetrimino -> right_side = 5; 
 
@@ -134,7 +175,7 @@ void game_loop(Tetris* tetris) {
     while (tetris -> gs == INGAME)
     {
         int i = 0;
-        for (; !collision(tetris); i++){
+        for (; !collision(tetris, tetris-> moving_tetrimino->height_top); i++){
             tetris -> moving_board = tetris -> locked_board;
             tetris -> moving_board -> arr[i] = tetris -> moving_tetrimino -> bitmask[i];
             tetris -> moving_board -> arr[i+1] = tetris -> moving_tetrimino -> bitmask[i+1];
@@ -154,7 +195,7 @@ void print_board(Tetris* tetris) {
     for (int i = 0; i < h; i++) {
         int value_of_the_board_space = *(board_arr + i);
 
-        for (int j = w; j > 0; j--){
+        for (int j = w - 1; j > 0; j--){
             if ( (value_of_the_board_space & (1 << j)) != 0 ) {
                 printf("X");
             }
@@ -168,13 +209,44 @@ void print_board(Tetris* tetris) {
     return;
 }
 
-bool collision(Tetris* tetris) {
+bool collision(const Tetris* tetris, int next_top_row) {
     int h = tetris -> locked_board -> height;
     int w = tetris -> locked_board -> width;
-    uint16_t* board_arr = tetris -> locked_board -> arr;
-    Tetrimino* moving_tetrimino = tetris -> moving_tetrimino
+    Tetrimino* moving_tetrimino = tetris -> moving_tetrimino;
+    const Board* locked = tetris -> locked_board;
 
-    if (moving_tetrimino -> bitmask[0])
+    for (int r = 0; r < 4; r++) {
+        uint16_t piece_row = moving_tetrimino -> bitmask[r];
+        if (piece_row == 0) {
+            continue;
+        }
 
-    return true;
+        int board_row = next_top_row + r;
+
+        if (board_row >= locked -> height) {
+            return true;
+        }
+
+        if ((locked -> arr[board_row] & piece_row) != 0) {
+            return true;
+        }
+    } 
+
+    return false;
+}
+
+void lock_piece (Tetris* tetris) {
+    Board* locked = tetris -> locked_board;
+    Tetrimino* moving_tetrimino = tetris -> moving_tetrimino;
+
+    for (int r = 0; r < 4; r++) {
+        uint16_t piece_row = moving_tetrimino -> bitmask[r];
+
+        if (piece_row == 0) continue;
+
+        int board_row = moving_tetrimino -> height_top + r;
+
+        if (board_row >= 0 && board_row < locked -> height) 
+            locked -> arr[board_row] | piece_row;
+    }
 }
