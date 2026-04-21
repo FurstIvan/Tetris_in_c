@@ -1,6 +1,8 @@
-./build
+/build/
+/.vscode/
 
-./bitmap.c
-./bitmap
-./bitmap.o
-./.vscode
+bitmap
+bitmap.o
+tetris_main
+tempCodeRunnerFile
+tempCodeRunnerFile.c

@@ -1,3 +1,0 @@
-/Users/ivanfurst/tetris/build/CMakeFiles/tetris_main.dir
-/Users/ivanfurst/tetris/build/CMakeFiles/edit_cache.dir
-/Users/ivanfurst/tetris/build/CMakeFiles/rebuild_cache.dir
