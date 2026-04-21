@@ -7,7 +7,13 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define FPS 60
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+
+#define TARGET_FPS 60.0
+#define FIXED_STEP (1.0 / 60.0)
+#define MAX_FRAME_TIME 0.25   
+
 #define HEIGHT 20
 #define WIDTH 10
 
@@ -148,7 +154,7 @@ void game_loop(Tetris* tetris) {
     {
         case INGAME:
             while(tetris -> gs == INGAME) {
-                int input = 1;
+                int input = 1; // to be done for keyboard innput
                 switch (input) {
                     case MOV_LEFT:
                         tetris->moving_tetrimino->left_x++;
@@ -202,10 +208,10 @@ void game_loop(Tetris* tetris) {
             break;
     
         case LOST:
-            printf("gg you lsot");
+            printf("gg you lost");
             break;
         case WON:
-            printf("gg you lost");
+            printf("gg you won");
             break;
 
         default:
@@ -290,11 +296,11 @@ bool collision(const Tetris* tetris, int next_top_row) {
     Tetrimino* moving_tetrimino = tetris -> moving_tetrimino;
     const Board* locked = tetris -> locked_board;
 
+    if (moving_tetrimino -> left_x == 10 || moving_tetrimino -> left_x - 4 == 0)
+        return true;
+
     for (int r = 0; r < 4; r++) {
         uint16_t piece_row = moving_tetrimino -> bitmask[r];
-        if (piece_row == 0) {
-            continue;
-        }
 
         int board_row = next_top_row + r;
 
