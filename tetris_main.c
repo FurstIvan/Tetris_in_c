@@ -5,10 +5,19 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
+#include <time.h>
 
 #define FPS 60
 #define HEIGHT 20
 #define WIDTH 10
+
+#define ROTATION_RIGHT do {                                                                                                    \
+        tetris -> moving_tetrimino -> tetrimino_state = (tetris -> moving_tetrimino -> tetrimino_state + 1) % 4;               \
+    } while (0);  
+    
+#define ROTATION_LEFT do {                                                                                                    \
+        tetris -> moving_tetrimino -> tetrimino_state = (tetris -> moving_tetrimino -> tetrimino_state + 3) % 4;              \
+    } while (0);  
 
 // think as in an array of row masks
 
@@ -40,6 +49,15 @@ typedef enum {
     END = 10
 }Gravity;
 
+typedef enum {
+    MOV_LEFT,
+    MOV_RIGHT,
+    MOV_DOWN_SLOW,
+    DROP_DOWN,
+    ROTATE_LEFT,
+    ROTATE_RIGHT
+} Inputs;
+
 typedef struct {            // board width is 16 but im only using 10 ig
     uint16_t* arr;
     int height;
@@ -48,17 +66,16 @@ typedef struct {            // board width is 16 but im only using 10 ig
 
 typedef struct {
     int height_top;            // where the top part of the tetrimino is
-    int left_side;
-    int right_side; 
+    int left_x;
     uint16_t bitmask[4];   // basic idea is i will have the 4 different state of the tetrimino next to eacah other consequentually
     Tetrimino_State tetrimino_state;
+    Shape shape;
 } Tetrimino;
 
 typedef struct {
     Gravity grav;
     Gamestate gs;
     Board* locked_board;
-    Board* moving_board;
     Tetrimino* moving_tetrimino;
 } Tetris; 
 
@@ -112,7 +129,7 @@ void print_board(Tetris*);
 Tetris* init_game();
 Board* init_board(int);
 void game_loop(Tetris*);
-Tetrimino* init_tetrimino();
+Tetrimino* init_tetrimino(Shape shape);
 bool collision(const Tetris*, int);
 
 int main () {
@@ -121,8 +138,80 @@ int main () {
 
     game_loop(tetris);
 
-
     return 0;
+}
+
+/// to be done: drop down hard
+
+void game_loop(Tetris* tetris) {
+    switch (tetris -> gs)
+    {
+        case INGAME:
+            while(tetris -> gs == INGAME) {
+                int input = 1;
+                switch (input) {
+                    case MOV_LEFT:
+                        tetris->moving_tetrimino->left_x++;
+                        if (collision(tetris, tetris->moving_tetrimino->height_top)) 
+                            tetris->moving_tetrimino->left_x--;
+                        break;
+
+                    case MOV_RIGHT:
+                        tetris->moving_tetrimino->left_x--;
+                        if (collision(tetris, tetris->moving_tetrimino->height_top)) 
+                            tetris->moving_tetrimino->left_x++;
+                        break;
+
+                    case MOV_DOWN_SLOW:
+                        tetris->moving_tetrimino->height_top--;
+                        if (collision(tetris, tetris->moving_tetrimino->height_top)) 
+                            tetris->moving_tetrimino->height_top++;
+                        break;
+                    
+                    case DROP_DOWN:
+                        // to be done
+                        break;
+
+                    case ROTATE_LEFT:
+                        ROTATION_LEFT;
+
+                        if (collision(tetris, tetris->moving_tetrimino->height_top)) 
+                            ROTATION_RIGHT;
+                        break;
+                    
+                    case ROTATE_RIGHT:
+                        ROTATION_RIGHT
+
+                        if (collision(tetris, tetris->moving_tetrimino->height_top)) 
+                            ROTATION_LEFT;
+                        break;
+                }
+
+                print_board(tetris);
+                int i = 0;
+                for (; !collision(tetris, tetris-> moving_tetrimino->height_top); i++){
+                    Board locked_board_copy = *(tetris -> locked_board);
+
+                    locked_board_copy.arr[i] = tetris -> moving_tetrimino -> bitmask[i];
+                    locked_board_copy.arr[i+1] = tetris -> moving_tetrimino -> bitmask[i+1];
+                }
+                tetris -> locked_board -> arr[i] += tetris -> moving_tetrimino -> bitmask[i];
+                tetris -> locked_board -> arr[i + 1] += tetris -> moving_tetrimino -> bitmask[i + 1];
+                
+            }
+            break;
+    
+        case LOST:
+            printf("gg you lsot");
+            break;
+        case WON:
+            printf("gg you lost");
+            break;
+
+        default:
+            break;
+    }
+
 }
 
 Tetris* init_game(){
@@ -135,15 +224,18 @@ Tetris* init_game(){
     tetris -> grav = grav;
     tetris -> gs = gs;
     tetris -> locked_board = init_board(height);
-    tetris -> moving_board = init_board(height);
-    tetris -> moving_tetrimino = init_tetrimino();
+
+    srand((time(NULL)));
+    Shape shape = rand() % (t_shape + 1);
+
+    tetris -> moving_tetrimino = init_tetrimino(shape);
 
     return tetris;
 }
 
 Board* init_board(int height) {
-    Board* board = malloc(sizeof(Board));
-    board -> arr = malloc(sizeof(uint16_t) * height);
+    Board* board = calloc(1, sizeof(Board));
+    board -> arr = calloc(1, sizeof(uint16_t) * height);
     board -> height = height; 
     board -> width  = 16;
 
@@ -154,37 +246,20 @@ Board* init_board(int height) {
     return board;
 }
 
-Tetrimino* init_tetrimino() {
+Tetrimino* init_tetrimino(const Shape shape) {
     Tetrimino* tetrimino = calloc(1, sizeof(Tetrimino));
+    tetrimino -> shape = shape;
 
-    tetrimino -> bitmask[0] |= (3 << 1);
-    tetrimino -> bitmask[1] |= (3 << 1);
-    tetrimino -> bitmask[2] = 0;
-    tetrimino -> bitmask[3] = 0;
+    for (int i = 0; i < 4; i++) {
+        tetrimino -> bitmask[i] |= all_shape_Tetrimino_State_Map[shape][i];
+    }
 
     tetrimino -> height_top = 0;
-    tetrimino -> left_side = 6;
-    tetrimino -> right_side = 5; 
+    tetrimino -> left_x = 6; 
 
     tetrimino -> tetrimino_state = Neutral;
 
     return tetrimino;
-}
-
-void game_loop(Tetris* tetris) {
-    while (tetris -> gs == INGAME)
-    {
-        int i = 0;
-        for (; !collision(tetris, tetris-> moving_tetrimino->height_top); i++){
-            tetris -> moving_board = tetris -> locked_board;
-            tetris -> moving_board -> arr[i] = tetris -> moving_tetrimino -> bitmask[i];
-            tetris -> moving_board -> arr[i+1] = tetris -> moving_tetrimino -> bitmask[i+1];
-        }
-        tetris -> locked_board -> arr[i] += tetris -> moving_tetrimino -> bitmask[i];
-        tetris -> locked_board -> arr[i + 1] += tetris -> moving_tetrimino -> bitmask[i + 1];
-        print_board(tetris);
-        break;
-    }
 }
 
 void print_board(Tetris* tetris) {
