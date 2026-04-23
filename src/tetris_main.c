@@ -25,6 +25,9 @@
         tetris -> moving_tetrimino -> tetrimino_state = (tetris -> moving_tetrimino -> tetrimino_state + 3) % 4;              \
     } while (0);  
 
+void rotate_right(Tetrimino* t);
+void rotate_left(Tetrimino* t);
+
 // think as in an array of row masks
 
 typedef enum {
@@ -142,6 +145,19 @@ int main () {
 
     Tetris* tetris = init_game();
 
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        SDL_Log("SDL_INIT_FAIL: %s", SDL_GetError());
+        return 1;
+    }
+
+    SDL_Window* window = SDL_CreateWindow("Tetris_in_C", 600, 800, SDL_WINDOW_FULLSCREEN);
+    
+    if (!window) {
+        SDL_Log("SDL_CREATE_WINDOW FAIL %s", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
     game_loop(tetris);
 
     return 0;
@@ -150,74 +166,76 @@ int main () {
 /// to be done: drop down hard
 
 void game_loop(Tetris* tetris) {
-    switch (tetris -> gs)
-    {
-        case INGAME:
-            while(tetris -> gs == INGAME) {
-                int input = 1; // to be done for keyboard innput
-                switch (input) {
-                    case MOV_LEFT:
-                        tetris->moving_tetrimino->left_x++;
-                        if (collision(tetris, tetris->moving_tetrimino->height_top)) 
-                            tetris->moving_tetrimino->left_x--;
-                        break;
-
-                    case MOV_RIGHT:
-                        tetris->moving_tetrimino->left_x--;
-                        if (collision(tetris, tetris->moving_tetrimino->height_top)) 
+    bool running = true;
+    while (running) {
+        SDL_Event input;
+        switch (tetris -> gs)
+        {
+            case INGAME:
+                while(SDL_PollEvent(&input)) {
+                    switch (input.type) {
+                        case MOV_LEFT:
                             tetris->moving_tetrimino->left_x++;
-                        break;
+                            if (collision(tetris, tetris->moving_tetrimino->height_top)) 
+                                tetris->moving_tetrimino->left_x--;
+                            break;
 
-                    case MOV_DOWN_SLOW:
-                        tetris->moving_tetrimino->height_top--;
-                        if (collision(tetris, tetris->moving_tetrimino->height_top)) 
-                            tetris->moving_tetrimino->height_top++;
-                        break;
-                    
-                    case DROP_DOWN:
-                        // to be done
-                        break;
+                        case MOV_RIGHT:
+                            tetris->moving_tetrimino->left_x--;
+                            if (collision(tetris, tetris->moving_tetrimino->height_top)) 
+                                tetris->moving_tetrimino->left_x++;
+                            break;
 
-                    case ROTATE_LEFT:
-                        ROTATION_LEFT;
+                        case MOV_DOWN_SLOW:
+                            tetris->moving_tetrimino->height_top--;
+                            if (collision(tetris, tetris->moving_tetrimino->height_top)) 
+                                tetris->moving_tetrimino->height_top++;
+                            break;
+                        
+                        case DROP_DOWN:
+                            // to be done
+                            break;
 
-                        if (collision(tetris, tetris->moving_tetrimino->height_top)) 
-                            ROTATION_RIGHT;
-                        break;
-                    
-                    case ROTATE_RIGHT:
-                        ROTATION_RIGHT
-
-                        if (collision(tetris, tetris->moving_tetrimino->height_top)) 
+                        case ROTATE_LEFT:
                             ROTATION_LEFT;
-                        break;
+
+                            if (collision(tetris, tetris->moving_tetrimino->height_top)) 
+                                ROTATION_RIGHT;
+                            break;
+                        
+                        case ROTATE_RIGHT:
+                            ROTATION_RIGHT
+
+                            if (collision(tetris, tetris->moving_tetrimino->height_top)) 
+                                ROTATION_LEFT;
+                            break;
+                    }
+
+                    print_board(tetris);
+                    int i = 0;
+                    for (; !collision(tetris, tetris-> moving_tetrimino->height_top); i++){
+                        Board locked_board_copy = *(tetris -> locked_board);
+
+                        locked_board_copy.arr[i] = tetris -> moving_tetrimino -> bitmask[i];
+                        locked_board_copy.arr[i+1] = tetris -> moving_tetrimino -> bitmask[i+1];
+                    }
+                    tetris -> locked_board -> arr[i] += tetris -> moving_tetrimino -> bitmask[i];
+                    tetris -> locked_board -> arr[i + 1] += tetris -> moving_tetrimino -> bitmask[i + 1];
+                    
                 }
+                break;
+        
+            case LOST:
+                running = false;
+                break;
+            case WON:
+                running = false;
+                break;
 
-                print_board(tetris);
-                int i = 0;
-                for (; !collision(tetris, tetris-> moving_tetrimino->height_top); i++){
-                    Board locked_board_copy = *(tetris -> locked_board);
-
-                    locked_board_copy.arr[i] = tetris -> moving_tetrimino -> bitmask[i];
-                    locked_board_copy.arr[i+1] = tetris -> moving_tetrimino -> bitmask[i+1];
-                }
-                tetris -> locked_board -> arr[i] += tetris -> moving_tetrimino -> bitmask[i];
-                tetris -> locked_board -> arr[i + 1] += tetris -> moving_tetrimino -> bitmask[i + 1];
-                
-            }
-            break;
-    
-        case LOST:
-            printf("gg you lost");
-            break;
-        case WON:
-            printf("gg you won");
-            break;
-
-        default:
-            break;
+            default:
+                running = false;
+        }
     }
-
 }
 
 Tetris* init_game(){
@@ -328,6 +346,13 @@ void lock_piece (Tetris* tetris) {
         int board_row = moving_tetrimino -> height_top + r;
 
         if (board_row >= 0 && board_row < locked -> height) 
-            locked -> arr[board_row] | piece_row;
+            locked -> arr[board_row] |= piece_row;
     }
+}
+
+void rotate_right(Tetrimino* t) {
+    t -> tetrimino_state = (t -> tetrimino_state + 1) % 4;
+}
+void rotate_left(Tetrimino* t) {
+    t -> tetrimino_state = (t -> tetrimino_state + 3) % 4;
 }
