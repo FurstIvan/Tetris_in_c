@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <limits.h>
+#include <stdlib.h>
 
 #define MAX_VALUE 1000
 #define WORD_BITS 64
@@ -59,5 +60,31 @@ int main(void) {
            sizeof(unsigned long long) * CHAR_BIT);
 
     printf("\n");
+
+
+    printf("--------------------------------------------------\n");
+
+    uint16_t value = 0b0110001111000001;
+
+    for (int i = 15; i != 0; i--) {
+       printf("%d", (value & (1u << i)) != 0);
+    }
+    printf("\n");    printf("\n");
+
+    int start = 1;
+    int sequence_length = 10;
+
+    printf("start = %d sequence:lentght : %d", start, sequence_length);
+
+        printf("\n");    printf("\n");  
+
+    uint16_t mask = (1U << sequence_length) - 1u;
+    uint8_t result = (mask << start) & value;
+
+    for (int i = 15; i >= 0; i--) {
+        printf("%d", (result & (1u << i)) != 0);
+    }
+    printf("\n");
+
     return 0;
 }

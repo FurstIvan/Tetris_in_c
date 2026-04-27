@@ -14,8 +14,11 @@
 #define FIXED_STEP (1.0 / 60.0)
 #define MAX_FRAME_TIME 0.25   
 
+%:define something <% char name <:3:> = "Bob"; %>;
+
 #define HEIGHT 20
 #define WIDTH 10
+#define SHAPE_ARR_LEN 5
 
 #define ROTATION_RIGHT do {                                                                                                    \
         tetris -> moving_tetrimino -> tetrimino_state = (tetris -> moving_tetrimino -> tetrimino_state + 1) % 4;               \
@@ -64,7 +67,9 @@ typedef enum {
     MOV_DOWN_SLOW,
     DROP_DOWN,
     ROTATE_LEFT,
-    ROTATE_RIGHT
+    ROTATE_RIGHT,
+    TRAP,
+    QUIT
 } Inputs;
 
 typedef struct {            // board width is 16 but im only using 10 ig
@@ -86,9 +91,10 @@ typedef struct {
     Gamestate gs;
     Board* locked_board;
     Tetrimino* moving_tetrimino;
+    Queue tetrimino_shape_queue;
 } Tetris; 
 
-static const uint16_t all_shape_Tetrimino_State_Map[t_shape + 1][4] = { // key is the tetrimino_state(int), the value is the bitmap, later from rotation we can decide which part of the tetrimino bitmap we can use
+static const uint16_t all_shape_Tetrimino_State_Map[t_shape + 1][4] = { 
     {       // left_l_shape
         4,                    // first _row of bitmask
         30244,                // second _row of bitmask
@@ -133,16 +139,115 @@ static const uint16_t all_shape_Tetrimino_State_Map[t_shape + 1][4] = { // key i
     }
 };
 
-
+Inputs input_mapper(const bool*);
 void print_board(Tetris*);
 Tetris* init_game();
 Board* init_board(int);
 void game_loop(Tetris*);
 Tetrimino* init_tetrimino(Shape shape);
 bool collision(const Tetris*, int);
+void hard_drop(Tetris*);
+
+typedef struct
+{
+    Shape shapes[SHAPE_ARR_LEN];
+    int front;
+    int rear;
+} Queue;
+
+void initializeQueue(Queue *q) {
+    // init que
+
+    q->front = -1;
+    q->rear = 0;
+}
+
+bool isEmpty(Queue *q) // chekc for empty
+{
+    return (q->front == q->rear - 1);
+}
+
+bool isFull(Queue *q) {
+    // check fullness
+    return (q->rear == SHAPE_ARR_LEN);
+}
+
+void enqueue(Queue *q, Shape shape) {
+    // add an element
+    if (isFull(q))
+    {
+        printf("Queue is full\n");
+        return;
+    }
+    q->shapes[q->rear] = shape;
+    q->rear++;
+}
+
+void dequeue(Queue *q) {
+    // remove first element
+    if (isEmpty(q))
+    {
+        printf("Queue is empty\n");
+        return;
+    }
+    q->front++;
+}
+
+int peek(Queue *q) {
+    // get the front elements 
+    if (isEmpty(q))
+    {
+        printf("Queue is empty\n");
+        return -1; 
+    }
+    return q->shapes[q->front + 1];
+}
+
+void printQueue(Queue *q) {
+    if (isEmpty(q))
+    {
+        printf("Queue is empty\n");
+        return;
+    }
+
+    printf("Current Queue: ");
+    for (int i = q->front + 1; i < q->rear; i++)
+    {
+        printf("%d ", q->shapes[i]);
+    }
+    printf("\n");
+}
+
+/*
+int main()
+{
+    Queue q;
+    initializeQueue(&q);
+
+    // Enqueue elements
+    enqueue(&q, 10);
+    printQueue(&q);
+    enqueue(&q, 20);
+    printQueue(&q);
+
+    enqueue(&q, 30);
+    printQueue(&q);
+
+    // Peek front element
+    printf("Front element: %d\n", peek(&q));
+
+    // Dequeue an element
+    dequeue(&q);
+    printQueue(&q);
+
+    // Peek front element after dequeue
+    printf("Front element after dequeue: %d\n", peek(&q));
+
+    return 0;
+}
+*/
 
 int main () {
-
     Tetris* tetris = init_game();
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -163,79 +268,116 @@ int main () {
     return 0;
 }
 
-/// to be done: drop down hard
+/// to be done implement queue basaed shape queue instead of just array, cause its a better representation on how it works than array
+void game_loop(Tetris *tetris)
+{
+    while (tetris->gs == INGAME) {
+        SDL_Event event;
 
-void game_loop(Tetris* tetris) {
-    bool running = true;
-    while (running) {
-        SDL_Event input;
-        switch (tetris -> gs)
-        {
-            case INGAME:
-                while(SDL_PollEvent(&input)) {
-                    switch (input.type) {
-                        case MOV_LEFT:
-                            tetris->moving_tetrimino->left_x++;
-                            if (collision(tetris, tetris->moving_tetrimino->height_top)) 
-                                tetris->moving_tetrimino->left_x--;
-                            break;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_EVENT_QUIT) {
+                tetris->gs = LOST;
+            }
+        }
 
-                        case MOV_RIGHT:
-                            tetris->moving_tetrimino->left_x--;
-                            if (collision(tetris, tetris->moving_tetrimino->height_top)) 
-                                tetris->moving_tetrimino->left_x++;
-                            break;
+        const bool *keys = SDL_GetKeyboardState(NULL);
+        Inputs input_conv = input_mapper(keys);
 
-                        case MOV_DOWN_SLOW:
-                            tetris->moving_tetrimino->height_top--;
-                            if (collision(tetris, tetris->moving_tetrimino->height_top)) 
-                                tetris->moving_tetrimino->height_top++;
-                            break;
-                        
-                        case DROP_DOWN:
-                            // to be done
-                            break;
+        switch (input_conv) {
+            case MOV_LEFT:
+                tetris->moving_tetrimino->left_x++;
 
-                        case ROTATE_LEFT:
-                            ROTATION_LEFT;
-
-                            if (collision(tetris, tetris->moving_tetrimino->height_top)) 
-                                ROTATION_RIGHT;
-                            break;
-                        
-                        case ROTATE_RIGHT:
-                            ROTATION_RIGHT
-
-                            if (collision(tetris, tetris->moving_tetrimino->height_top)) 
-                                ROTATION_LEFT;
-                            break;
-                    }
-
-                    print_board(tetris);
-                    int i = 0;
-                    for (; !collision(tetris, tetris-> moving_tetrimino->height_top); i++){
-                        Board locked_board_copy = *(tetris -> locked_board);
-
-                        locked_board_copy.arr[i] = tetris -> moving_tetrimino -> bitmask[i];
-                        locked_board_copy.arr[i+1] = tetris -> moving_tetrimino -> bitmask[i+1];
-                    }
-                    tetris -> locked_board -> arr[i] += tetris -> moving_tetrimino -> bitmask[i];
-                    tetris -> locked_board -> arr[i + 1] += tetris -> moving_tetrimino -> bitmask[i + 1];
-                    
+                if (collision(tetris, tetris->moving_tetrimino->height_top)) {
+                    tetris->moving_tetrimino->left_x--;
                 }
+
                 break;
-        
-            case LOST:
-                running = false;
+
+            case MOV_RIGHT:
+                tetris->moving_tetrimino->left_x--;
+
+                if (collision(tetris, tetris->moving_tetrimino->height_top)) {
+                    tetris->moving_tetrimino->left_x++;
+                }
+
                 break;
-            case WON:
-                running = false;
+
+            case MOV_DOWN_SLOW:
+                tetris->moving_tetrimino->height_top--;
+
+                if (collision(tetris, tetris->moving_tetrimino->height_top)) {
+                    tetris->moving_tetrimino->height_top++;
+                }
+
+                break;
+
+            case DROP_DOWN:
+                hard_drop(tetris);
+                break;
+
+            case ROTATE_LEFT:
+                ROTATION_LEFT;
+
+                if (collision(tetris, tetris->moving_tetrimino->height_top)) {
+                    ROTATION_RIGHT;
+                }
+
+                break;
+
+            case ROTATE_RIGHT:
+                ROTATION_RIGHT;
+
+                if (collision(tetris, tetris->moving_tetrimino->height_top)) {
+                    ROTATION_LEFT;
+                }
+
+                break;
+
+            case QUIT:
+                tetris->gs = LOST;
+                break;
+
+            case TRAP:
                 break;
 
             default:
-                running = false;
+                break;
         }
+
+        print_board(tetris);
     }
+    if (tetris -> gs == LOST) { return; } 
+    if (tetris -> gs == WON) { return; } 
+    exit(1); // you either lose or win of somehow got something else just quit
+}
+
+
+Inputs input_mapper(const bool *keys) {
+    if (keys[SDL_SCANCODE_A]) {
+        return MOV_LEFT;
+    }
+
+    if (keys[SDL_SCANCODE_D]) {
+        return MOV_RIGHT;
+    }
+
+    if (keys[SDL_SCANCODE_S]) {
+        return MOV_DOWN_SLOW;
+    }
+
+    if (keys[SDL_SCANCODE_SPACE]) {
+        return DROP_DOWN;
+    }
+
+    if (keys[SDL_SCANCODE_W]) {
+        return ROTATE_LEFT;
+    }
+
+    if (keys[SDL_SCANCODE_Q]) {
+        return ROTATE_RIGHT;
+    }
+
+    return TRAP;
 }
 
 Tetris* init_game(){
@@ -253,6 +395,12 @@ Tetris* init_game(){
     Shape shape = rand() % (t_shape + 1);
 
     tetris -> moving_tetrimino = init_tetrimino(shape);
+
+    for (int i = 0; i < SHAPE_ARR_LEN; i++) {
+        Shape random_shape = rand() % (t_shape + 1);
+        tetris -> tetrimino_shape_queue;
+    }
+
 
     return tetris;
 }
@@ -356,3 +504,62 @@ void rotate_right(Tetrimino* t) {
 void rotate_left(Tetrimino* t) {
     t -> tetrimino_state = (t -> tetrimino_state + 3) % 4;
 }
+
+void place_tetrimino(Tetris* tetris, int height_top, int left) {
+    Tetrimino* tetrimino = tetris -> moving_tetrimino;
+    Tetrimino_State state = tetrimino -> tetrimino_state;
+    Board* board = tetris ->locked_board;
+
+    for (int i = 0; i < 4; i++) {
+        uint16_t tetrimino_row = tetrimino -> bitmask[i];
+        int amount_of_bits_per_window = 4;
+        int starting_bit = state * 4;
+
+        uint16_t mask = (1u << amount_of_bits_per_window) - 1u; // this is giving us an array full of 1-s that we can later use to make a result
+        uint16_t result =((mask << starting_bit) & tetrimino_row) >> starting_bit; // this will only be true where there is a 1 or at the specific place we need, and then we normalize it
+
+        uint16_t row_ready = result << left;
+
+        board -> arr[height_top + i] |= row_ready; 
+    }
+    tetrimino -> 
+}
+
+void get_new_tetrimino(Tetris* tetris) {
+    Tetrimino* tetrimino = tetris -> moving_tetrimino;
+    tetrimino -> shape = tetris -> tetrimino_shape_array[0];
+
+    for (int i = 0; i < 4; i++) {
+        tetrimino -> bitmask[i] |= all_shape_Tetrimino_State_Map[tetrimino -> shape][i];
+    }
+
+    tetrimino -> height_top = 0;
+    tetrimino -> left_x = 6; 
+
+    tetrimino -> tetrimino_state = Neutral;
+
+    Shape random_shape = rand() % (t_shape + 1);
+    tetris -> tetrimino_shape_array[-1] = random_shape;
+    return;
+}
+
+void free_tetrimino(Tetrimino* tetrimino) {
+    free(tetrimino);
+}
+
+void hard_drop(Tetris* tetris) {
+    // the algo i came up with, check from tetrimino level downwards, untill collsion 
+    Tetrimino* tetrimino = tetris -> moving_tetrimino;
+    Board* board = tetris -> locked_board;
+    int height = board -> height;
+    int bottom_part_tetrimino = tetrimino -> height_top + 3;
+
+    for (;bottom_part_tetrimino != height; bottom_part_tetrimino++) {
+        if (collision(tetris, bottom_part_tetrimino)) {
+            place_tetrimino(tetris, bottom_part_tetrimino - 1, tetrimino -> left_x);
+        }
+    }
+
+    return;
+}
+
