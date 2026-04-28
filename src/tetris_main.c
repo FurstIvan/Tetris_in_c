@@ -18,7 +18,7 @@
 
 #define HEIGHT 20
 #define WIDTH 10
-#define SHAPE_ARR_LEN 5
+#define SHAPE_QUEUE_LEN 5
 
 #define ROTATION_RIGHT do {                                                                                                    \
         tetris -> moving_tetrimino -> tetrimino_state = (tetris -> moving_tetrimino -> tetrimino_state + 1) % 4;               \
@@ -91,7 +91,7 @@ typedef struct {
     Gamestate gs;
     Board* locked_board;
     Tetrimino* moving_tetrimino;
-    Queue tetrimino_shape_queue;
+    Queue* tetrimino_shape_queue;
 } Tetris; 
 
 static const uint16_t all_shape_Tetrimino_State_Map[t_shape + 1][4] = { 
@@ -150,31 +150,31 @@ void hard_drop(Tetris*);
 
 typedef struct
 {
-    Shape shapes[SHAPE_ARR_LEN];
+    Shape shapes[SHAPE_QUEUE_LEN];
     int front;
     int rear;
 } Queue;
 
-void initializeQueue(Queue *q) {
+void init_queue(Queue *q) {
     // init que
 
     q->front = -1;
     q->rear = 0;
 }
 
-bool isEmpty(Queue *q) // chekc for empty
+bool is_empty(Queue *q) // chekc for empty
 {
     return (q->front == q->rear - 1);
 }
 
-bool isFull(Queue *q) {
+bool is_full(Queue *q) {
     // check fullness
-    return (q->rear == SHAPE_ARR_LEN);
+    return (q->rear == SHAPE_QUEUE_LEN);
 }
 
 void enqueue(Queue *q, Shape shape) {
-    // add an element
-    if (isFull(q))
+    // add an element to the back
+    if (is_full(q))
     {
         printf("Queue is full\n");
         return;
@@ -183,28 +183,21 @@ void enqueue(Queue *q, Shape shape) {
     q->rear++;
 }
 
-void dequeue(Queue *q) {
+Shape dequeue(Queue *q) {
     // remove first element
-    if (isEmpty(q))
+    if (is_empty(q))
     {
         printf("Queue is empty\n");
-        return;
+        return -1;
+    }
+    else {
+        return q->shapes[q->front + 1];
     }
     q->front++;
 }
 
-int peek(Queue *q) {
-    // get the front elements 
-    if (isEmpty(q))
-    {
-        printf("Queue is empty\n");
-        return -1; 
-    }
-    return q->shapes[q->front + 1];
-}
-
-void printQueue(Queue *q) {
-    if (isEmpty(q))
+void print_queue(Queue *q) {
+    if (is_empty(q))
     {
         printf("Queue is empty\n");
         return;
@@ -217,35 +210,6 @@ void printQueue(Queue *q) {
     }
     printf("\n");
 }
-
-/*
-int main()
-{
-    Queue q;
-    initializeQueue(&q);
-
-    // Enqueue elements
-    enqueue(&q, 10);
-    printQueue(&q);
-    enqueue(&q, 20);
-    printQueue(&q);
-
-    enqueue(&q, 30);
-    printQueue(&q);
-
-    // Peek front element
-    printf("Front element: %d\n", peek(&q));
-
-    // Dequeue an element
-    dequeue(&q);
-    printQueue(&q);
-
-    // Peek front element after dequeue
-    printf("Front element after dequeue: %d\n", peek(&q));
-
-    return 0;
-}
-*/
 
 int main () {
     Tetris* tetris = init_game();
@@ -264,11 +228,9 @@ int main () {
     }
 
     game_loop(tetris);
-
     return 0;
 }
 
-/// to be done implement queue basaed shape queue instead of just array, cause its a better representation on how it works than array
 void game_loop(Tetris *tetris)
 {
     while (tetris->gs == INGAME) {
@@ -387,6 +349,9 @@ Tetris* init_game(){
     Gamestate gs = INGAME;
 
     Tetris* tetris = malloc(sizeof(Tetris));
+    tetris -> tetrimino_shape_queue = malloc(sizeof(Queue));
+    init_queue(tetris -> tetrimino_shape_queue);
+
     tetris -> grav = grav;
     tetris -> gs = gs;
     tetris -> locked_board = init_board(height);
@@ -395,12 +360,13 @@ Tetris* init_game(){
     Shape shape = rand() % (t_shape + 1);
 
     tetris -> moving_tetrimino = init_tetrimino(shape);
+    Queue* que_ptr = tetris -> tetrimino_shape_queue;
 
-    for (int i = 0; i < SHAPE_ARR_LEN; i++) {
+    for (int i = 0; i < SHAPE_QUEUE_LEN; i++) {
         Shape random_shape = rand() % (t_shape + 1);
-        tetris -> tetrimino_shape_queue;
+        enqueue(que_ptr, random_shape);
     }
-
+    print_queue(que_ptr);
 
     return tetris;
 }
@@ -522,12 +488,12 @@ void place_tetrimino(Tetris* tetris, int height_top, int left) {
 
         board -> arr[height_top + i] |= row_ready; 
     }
-    tetrimino -> 
+    return;
 }
 
 void get_new_tetrimino(Tetris* tetris) {
     Tetrimino* tetrimino = tetris -> moving_tetrimino;
-    tetrimino -> shape = tetris -> tetrimino_shape_array[0];
+    tetrimino -> shape = dequeue(tetris -> tetrimino_shape_queue);
 
     for (int i = 0; i < 4; i++) {
         tetrimino -> bitmask[i] |= all_shape_Tetrimino_State_Map[tetrimino -> shape][i];
@@ -539,7 +505,8 @@ void get_new_tetrimino(Tetris* tetris) {
     tetrimino -> tetrimino_state = Neutral;
 
     Shape random_shape = rand() % (t_shape + 1);
-    tetris -> tetrimino_shape_array[-1] = random_shape;
+    enqueue(tetris -> tetrimino_shape_queue, random_shape);
+
     return;
 }
 
@@ -557,6 +524,7 @@ void hard_drop(Tetris* tetris) {
     for (;bottom_part_tetrimino != height; bottom_part_tetrimino++) {
         if (collision(tetris, bottom_part_tetrimino)) {
             place_tetrimino(tetris, bottom_part_tetrimino - 1, tetrimino -> left_x);
+            get_new_tetrimino(tetris);
         }
     }
 
