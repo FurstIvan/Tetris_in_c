@@ -8,5 +8,23 @@ int main(void) {
 
     char* printf = "printf";
 
-    helloworld(printf); 
+    helloworld(printf);
+    
+    int rear = 4;
+    int lenght = 3;
+
+    rear = (++rear) % lenght;
+
+    fprintf(stdout,"%d\n", rear);
+
+
+    int height = 10;
+    int height_top = 5;
+
+    for (;height_top != height - 3; height_top++) {   
+    }
+    
+    fprintf(stdout, "%d\n", height_top);
+
+    return 0;
 }
