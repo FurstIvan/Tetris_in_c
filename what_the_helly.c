@@ -15,7 +15,30 @@ typedef enum {
     END   = 10
 }Gravity;
 
+void _foo (void) //actual function
+{
+    printf("foo\n\n");
+    return;
+}
+
+void (*foo_v)(void); // foo_v named variable to a function that has this stly
+
+void* foo(void); // without the brackets its a funciton declaration
+
+typedef void (*foo_t)(void); // typedefiniton declaration of func pointers
+
+typedef void foo_t_d(void); // now this comboo is a function declaration 
+foo_t_d foo_t_d_v; 
+
 int main(void) {
+
+    foo_t foo_p = _foo; // here is said foo_p is going to be equal to the address of function
+
+    foo_v = _foo; // here i set the variable to be that;
+
+    foo_v();
+    foo_p();
+
     int (*helloworld)(const char*, ...);
 
     helloworld = &printf;
