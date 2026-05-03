@@ -1,54 +1,58 @@
 #include "board.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
 Board* init_board(int height) {
     Board* board = calloc(1, sizeof(Board));
-    board->arr = calloc(1, sizeof(uint16_t) * height);
-    board->height = height;
-    board->width = 16;
+    board -> arr = calloc(1, sizeof(uint16_t) * height);
+    board -> height = height; 
+    board -> width  = VISIBLE_WIDTH + HIDDEN_WIDTH_SIZE;
 
     for (int i = 0; i < height; i++) {
-        board->arr[i] = 0;
-    }
+        board -> arr[i] = 0;
+    } 
 
     return board;
 }
 
+void free_board(Board* board) {
+    free(board -> arr);
+    free(board);
+    return;
+}
+
 void print_board(Tetris* tetris) {
-    int h = tetris->locked_board->height;
-    int w = tetris->locked_board->width;
-    uint16_t* board_arr = tetris->locked_board->arr;
+    int h = tetris -> locked_board -> height;
+    uint16_t* board_arr = tetris -> locked_board -> arr;
 
     for (int i = 0; i < h; i++) {
-        int value_of_the_board_space = *(board_arr + i);
+        uint16_t value_of_the_board_space = *(board_arr + i);
 
-        for (int j = w - 1; j > 0; j--) {
-            if ((value_of_the_board_space & (1 << j)) != 0) {
+        for (int j = VISIBLE_WIDTH - 1; j >= 0; j--){
+            if ( (value_of_the_board_space & (1 << j)) != 0 ) {
                 printf("X");
-            } else {
+            }
+            else {
                 printf("_");
             }
         }
-        printf("%d\n", value_of_the_board_space);
+        printf("%u\n", value_of_the_board_space);
     }
 
     return;
 }
 
-void lock_piece(Tetris* tetris) {
-    Board* locked = tetris->locked_board;
-    Tetrimino* moving_tetrimino = tetris->moving_tetrimino;
+void line_clear(Board* board, int row) {
+    board -> arr[row] = 0;
+    for (; row > 1; row--) {
+        board -> arr[row] = board -> arr[row - 1];
+    }
+}
 
-    for (int r = 0; r < 4; r++) {
-        uint16_t piece_row = moving_tetrimino->bitmask[r];
+void line_clear_check(Tetris* tetris) {
+    int line_clear_mask = (1u <<  VISIBLE_WIDTH) - 1;
 
-        if (piece_row == 0) continue;
-
-        int board_row = moving_tetrimino->height_top + r;
-
-        if (board_row >= 0 && board_row < locked->height)
-            locked->arr[board_row] |= piece_row;
+    for (int row = tetris->locked_board->height - 1; row >= 2; row--) {
+        if (tetris -> locked_board -> arr[row] == line_clear_mask) {
+            row += 1;
+        }
     }
 }

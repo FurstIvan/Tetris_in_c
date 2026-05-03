@@ -1,10 +1,12 @@
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef TETRIS_BOARD_H
+#define TETRIS_BOARD_H
 
-#include "tetris.h"
+#include "types.h"
 
-Board* init_board(int height);
-void print_board(Tetris* tetris);
-void lock_piece(Tetris* tetris);
+void print_board(Tetris*);
+Board* init_board(int);
+void line_clear_check(Tetris*); 
+void line_clear(Board*, int);
+void free_board(Board*);
 
 #endif
