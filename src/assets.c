@@ -3,7 +3,7 @@
 Assets* font_init(void) {
     Assets *asset = malloc(sizeof(Assets));
 
-    asset->font = TTF_OpenFont("../assets/fonts/Creepster-Regular.ttf", 24.0f);
+    asset->font = TTF_OpenFont("../assets/fonts/Creepster-Regular.ttf", 50.0f);
 
     if (asset->font == NULL) {
         SDL_Log("Failed to open font: %s", SDL_GetError());

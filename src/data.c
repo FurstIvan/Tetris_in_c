@@ -15,7 +15,7 @@ Tetrimino_Color color_map[t_shape + 2] = {
     [left_z_block] = {1u, 237u, 250u}, 
     [right_z_block] = {221u, 10u, 178u}, 
     [t_shape] = {234u, 20u, 28u},
-    {225u, 248u, 220u}}; // locked board square color  
+    [t_shape + 1] = {225u, 248u, 220u}}; // locked board square color  
 
 const Rotation_mask all_shape_Tetrimino_State_Map[t_shape + 1][Rotated_thrice +1] = { 
     [left_l_shape] = {
@@ -62,8 +62,8 @@ const Rotation_mask all_shape_Tetrimino_State_Map[t_shape + 1][Rotated_thrice +1
     [right_l_shape] = {
         {
             .rows = {
-                0b0001,
-                0b0001,
+                0b0010,
+                0b0010,
                 0b0011,
                 0b0000
             },
@@ -72,8 +72,8 @@ const Rotation_mask all_shape_Tetrimino_State_Map[t_shape + 1][Rotated_thrice +1
         },
         {
             .rows = {
-                0b0100,
                 0b0111,
+                0b0100,
                 0b0000,
                 0b0000
             },
@@ -82,16 +82,16 @@ const Rotation_mask all_shape_Tetrimino_State_Map[t_shape + 1][Rotated_thrice +1
         }, {
             .rows = {
                 0b0011,
-                0b0010,
-                0b0010,
+                0b0001,
+                0b0001,
                 0b0000
             },
             .width = 2,
             .height = 3
         }, {
             .rows = {
-                0b0111,
                 0b0001,
+                0b0111,
                 0b0000,
                 0b0000
             },

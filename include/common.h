@@ -65,9 +65,12 @@
 #define HOLD_TETRIMINO_Y BOARD_Y 
 
 #define TEXT_WIDTH_PIXEL (float)50
-#define TEXT_HEIGHT_PIXEL (float)30
-#define TEXT_X (float)20
-#define TEXT_Y (float)100
+#define TEXT_HEIGHT_PIXEL (float)25
+
+#define SCORE_FONT_SIZE 20.0f
+
+#define SCORE_TEXT_X LOGICAL_WIDTH / 2 
+#define SCORE_TEXT_Y BOARD_Y - 50
 
 // macros in the future #define TYPE_OF_INT uint_ ## (HIDDEN_WIDTH + VISIBLE_WIDTH)
 

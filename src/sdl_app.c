@@ -130,11 +130,12 @@ void game_loop(Tetris *tetris)
             last_score = tetris -> score;
         }
 
+        
         SDL_FRect text_destination = {
-            .x = TEXT_X,
-            .y = TEXT_Y,
-            .w = TEXT_WIDTH_PIXEL,
-            .h = TEXT_HEIGHT_PIXEL,
+            .x = SCORE_TEXT_X - (score_texture -> w / 2),
+            .y = SCORE_TEXT_Y,
+            .w = score_texture -> w,
+            .h = score_texture -> h,
         };
 
         SDL_SetRenderDrawColor(renderer,DEFAULT_COLOR,SDL_ALPHA_OPAQUE);
