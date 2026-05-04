@@ -2,12 +2,24 @@
 #include "data.h"
 #include "tetrimino.h"
 #include "sdl_app.h"
+#include "assets.h"
 
 // current frame rendering is 480, 640 -> will stretch --> 10 block wide 
 // each block should be 28x28
 void set_tetrimino_color(SDL_Renderer *renderer, Shape shape) {
     SDL_SetRenderDrawColor(renderer, color_map[shape].r,color_map[shape].g, color_map[shape].b, SDL_ALPHA_OPAQUE);
     return;
+}
+
+SDL_Texture* render_score_texture_creater(SDL_Renderer* renderer, Tetris* tetris, Assets* asset) {
+    char score_Str[20];
+    sprintf(score_Str, "%llu", tetris ->score);
+    const char* score_Text = score_Str;
+    SDL_Color color = (SDL_Color){.a = SDL_ALPHA_OPAQUE, .r = 0, .g = 0, .b = 0};
+    SDL_Texture* texture = create_text_texture(renderer, asset -> font, score_Text, color, 0, 0);
+
+    
+    return texture;
 }
 
 void render_hold_tetrimino(SDL_Renderer* rernderer, Tetris* tetris) {
@@ -171,7 +183,7 @@ void render_current_frame(SDL_Renderer* renderer, Tetris* tetris) {
         }
 
         int board_row = tetrimino->height_top + piece_row;
-        int screen_row = board_row;
+        int screen_row = board_row - HIDDEN_LAYER_SIZE;
 
         if (screen_row < 0 || screen_row >= VISIBLE_HEIGHT) {
             continue;

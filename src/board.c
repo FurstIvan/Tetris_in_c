@@ -1,4 +1,5 @@
 #include "board.h"
+#include "data.h"
 
 Board* init_board(int height) {
     Board* board = calloc(1, sizeof(Board));
@@ -47,12 +48,22 @@ void line_clear(Board* board, int row) {
     }
 }
 
+static bool last_clear_tetris = false;
+
 void line_clear_check(Tetris* tetris) {
     int line_clear_mask = (1u <<  VISIBLE_WIDTH) - 1;
 
+    uint8_t lines_cleared = 0;
     for (int row = tetris->locked_board->height - 1; row >= 2; row--) {
         if (tetris -> locked_board -> arr[row] == line_clear_mask) {
+            line_clear(tetris->locked_board, row);
+            lines_cleared += 1;
             row += 1;
         }
     }
+    uint16_t score_to_add = simple_score_board[lines_cleared] * 100;
+    if (last_clear_tetris) {score_to_add *= 1.5;}
+    if (lines_cleared > 3) {last_clear_tetris = true;}
+
+    tetris -> score += score_to_add;
 }

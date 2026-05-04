@@ -1,10 +1,37 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.20)
 
-project(tetris_main C)
+project(tetris C)
 
-find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3)
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
-add_executable(tetris_main main.c data.c sdl_app.c render.c input.c game.c collision.c tetrimino.c board.c queue.c)
+find_package(SDL3 REQUIRED CONFIG)
+find_package(SDL3_ttf REQUIRED CONFIG)
 
-target_include_directories(tetris_main PRIVATE src)
-target_link_libraries(tetris_main PRIVATE SDL3::SDL3)
+add_executable(tetris
+    main.c
+    assets.c
+    render.c
+    board.c
+    collision.c
+    data.c
+    game.c
+    input.c
+    queue.c
+    render.c
+    sdl_app.c
+    tetrimino.c
+)
+
+target_include_directories(tetris PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include
+)
+
+target_link_libraries(tetris PRIVATE
+    SDL3::SDL3
+    SDL3_ttf::SDL3_ttf
+)
+
+add_custom_command(TARGET tetris POST_BUILD
+    COMMAND cmake -E copy_directory ../assets assets
+)

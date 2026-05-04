@@ -8,18 +8,18 @@ void input_handler(Input_types input_conv, Tetris* tetris) {
             
             int next_right_x = tetris->moving_tetrimino->x_right - 1;
             if (side_collision(tetris, next_right_x)) {
-                break;
+            } else {
+                tetris->moving_tetrimino->x_right = next_right_x;
             }
-            tetris->moving_tetrimino->x_right = next_right_x;
             break;
         }
 
         case MOV_RIGHT:{ 
             int next_right_x = tetris->moving_tetrimino->x_right + 1;
             if (side_collision(tetris, next_right_x)) {
-                break;
+            } else {
+                tetris->moving_tetrimino->x_right = next_right_x;
             }
-            tetris->moving_tetrimino->x_right = next_right_x;
             break;
         }
 
@@ -27,9 +27,9 @@ void input_handler(Input_types input_conv, Tetris* tetris) {
             int next_height = tetris->moving_tetrimino->height_top+1;
             if (fall_collision(tetris,next_height)) {
                 place_clear_over_new(tetris);
-                break;
+            } else {
+                tetris->moving_tetrimino->height_top = next_height;
             }
-            tetris->moving_tetrimino->height_top = next_height;
             break;
         }
 
@@ -61,10 +61,10 @@ void input_handler(Input_types input_conv, Tetris* tetris) {
 
         case HOLD: {
             if (tetris -> played_hold) {
-                break;
+            } else {
+                hold(tetris);
+                tetris -> played_hold = true;
             }
-            hold(tetris);
-            tetris -> played_hold = true;
             break;
         }
 

@@ -2,6 +2,7 @@
 #define TETRIS_BOARD_H
 
 #include "types.h"
+#include "assets.h"
 
 void print_board(Tetris*);
 Board* init_board(int);

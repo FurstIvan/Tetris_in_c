@@ -2,6 +2,7 @@
 #define TETRIS_SDL_APP_H
 
 #include "types.h"
+#include "assets.h"
 
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;

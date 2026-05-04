@@ -21,6 +21,7 @@ Tetris* init_game(){
     tetris -> input_buffer_speed = INPUT_BUFFER_SPEED;
     tetris -> hold_tetrimino = (Tetrimino) {.height_top= -100};
     tetris -> played_hold = false;
+    tetris -> asset = font_init();
 
     srand((time(NULL)));
     Shape shape = rand() % (t_shape + 1);
@@ -127,13 +128,16 @@ void game_over_check(Tetris* tetris) {
 }
 
 void free_tetris(Tetris* tetris) {
+    
     Queue* q = tetris ->tetrimino_shape_queue;
     Board* board = tetris -> locked_board;
     Tetrimino* moving_tetrimino = tetris -> moving_tetrimino;
+    Assets* asset = tetris -> asset;
 
     free_queue(q);
     free_board(board);
     free_tetrimino(moving_tetrimino);
+    font_free(asset);
     free(tetris);
     return;
 }

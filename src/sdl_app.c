@@ -40,6 +40,12 @@ bool SDL_init() {
         return false;
     }
 
+    if (!TTF_Init()) {
+        SDL_Log("Couldn't initialize TTF: %s", SDL_GetError());
+        SDL_Quit();
+        return false;
+    }
+
     SDL_SetRenderLogicalPresentation(renderer, LOGICAL_WIDTH, LOGICAL_HEIGHT, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
     return true;
 }
@@ -55,6 +61,14 @@ void game_loop(Tetris *tetris)
     tetris -> grav = grav_ramp_states[current_grav];
 
     Input_types last_input = TRAP;
+
+    uint64_t last_score = 0;
+
+    SDL_Texture* score_texture = render_score_texture_creater(
+        renderer,
+        tetris,
+        tetris->asset
+    );
 
     while (tetris->gs == INGAME) {
 
@@ -98,14 +112,39 @@ void game_loop(Tetris *tetris)
             update(tetris);
             delta_time -= drop_interval;
         }
-        
-        
+
+        if (last_score != tetris->score) {
+            SDL_DestroyTexture(score_texture);
+
+            score_texture = render_score_texture_creater(
+                renderer,
+                tetris,
+                tetris -> asset
+            );
+
+            if (score_texture == NULL) {
+                SDL_Log("Failed to create score texture: %s", SDL_GetError());
+                exit(1);
+            }
+
+            last_score = tetris -> score;
+        }
+
+        SDL_FRect text_destination = {
+            .x = TEXT_X,
+            .y = TEXT_Y,
+            .w = TEXT_WIDTH_PIXEL,
+            .h = TEXT_HEIGHT_PIXEL,
+        };
+
         SDL_SetRenderDrawColor(renderer,DEFAULT_COLOR,SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
 
         render_current_frame(renderer, tetris); 
         render_side_bar(renderer,tetris);
         render_hold_tetrimino(renderer, tetris);
+
+        SDL_RenderTexture(renderer, score_texture, NULL, &text_destination);
 
         SDL_RenderPresent(renderer);
 

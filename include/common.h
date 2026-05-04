@@ -9,9 +9,11 @@
 #include <math.h>
 #include <stdbool.h>
 #include <time.h>
+#include <string.h>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #define TARGET_FPS 60.0
 #define TARGET_FRAME_TIME (1.0 / TARGET_FPS)
@@ -29,7 +31,7 @@
 #define ACTUAL_ROTATION_LEFT tetris -> moving_tetrimino -> tetrimino_state = (tetris -> moving_tetrimino -> tetrimino_state + 3) % 4;
 #define ROTATION_LEFT (tetris -> moving_tetrimino -> tetrimino_state + 3) % 4
 
-#define SCORE_NEED_FOR_GRAV_RAMPING_UP 100
+#define SCORE_NEED_FOR_GRAV_RAMPING_UP 2000
 
 #define VISIBLE_HEIGHT 20
 #define VISIBLE_WIDTH 10
@@ -61,6 +63,11 @@
 
 #define HOLD_TETRIMINO_X BOARD_X - (1 * BLOCK_SIZE) - 20
 #define HOLD_TETRIMINO_Y BOARD_Y 
+
+#define TEXT_WIDTH_PIXEL (float)50
+#define TEXT_HEIGHT_PIXEL (float)30
+#define TEXT_X (float)20
+#define TEXT_Y (float)100
 
 // macros in the future #define TYPE_OF_INT uint_ ## (HIDDEN_WIDTH + VISIBLE_WIDTH)
 

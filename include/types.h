@@ -2,11 +2,15 @@
 #define TETRIS_TYPES_H
 
 #include "common.h"
+#include "assets.h"
 
 typedef struct Tetrimino Tetrimino;
 typedef struct Queue Queue;
 typedef struct Tetris Tetris;
 typedef struct Board Board;
+typedef struct Input Input;
+typedef struct Tetrimino_Color Tetrimino_Color;
+typedef struct Rotation_mask Rotation_mask;
 
 typedef enum {
     INGAME,
@@ -57,11 +61,11 @@ typedef enum {
     QUIT
 } Input_types;
 
-typedef struct {
+struct Input{
     Input_types input_type;
     bool is_pressed;
     bool is_released;
-} Input;
+} ;
 
 struct Board{            // board width is 16 but im only using 10 ig
     uint16_t* arr;
@@ -69,11 +73,11 @@ struct Board{            // board width is 16 but im only using 10 ig
     int width;
 } ;
 
-typedef struct Tetrimino_Color {
+struct Tetrimino_Color {
     uint8_t r;
     uint8_t g;
     uint8_t b;
-} Tetrimino_Color;
+};
 
 struct Tetrimino{
     int height_top;            // where the top part of the tetrimino is
@@ -92,6 +96,7 @@ struct Tetris{
     double input_buffer_speed;
     Tetrimino hold_tetrimino;
     bool played_hold;
+    Assets* asset;
 } ; 
 
 struct Queue{
@@ -102,10 +107,10 @@ struct Queue{
     int size;
 } ;
 
-typedef struct Rotation_mask {
+struct Rotation_mask {
     uint8_t rows[4];
     uint8_t width;
     int height;
-} Rotation_mask;
+} ;
 
 #endif
