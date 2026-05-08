@@ -1,7 +1,7 @@
 #include "render.h"
 #include "data.h"
 #include "tetrimino.h"
-#include "sdl_app.h"
+#include "tetris_main_loop.h"
 #include "assets.h"
 
 // current frame rendering is 480, 640 -> will stretch --> 10 block wide 
@@ -18,7 +18,6 @@ SDL_Texture* render_score_texture_creater(SDL_Renderer* renderer, Tetris* tetris
     SDL_Color color = (SDL_Color){.a = SDL_ALPHA_OPAQUE, .r = 0, .g = 0, .b = 0};
     SDL_Texture* texture = create_text_texture(renderer, asset -> font, score_Text, color, 0, 0);
 
-    
     return texture;
 }
 
@@ -30,8 +29,8 @@ void render_hold_tetrimino(SDL_Renderer* rernderer, Tetris* tetris) {
         .h = BLOCK_SIZE,
     };
 
-    SDL_SetRenderDrawColor(renderer, 80,80,80,SDL_ALPHA_OPAQUE);
-    SDL_RenderRect(renderer, &(hold_ouline));
+    SDL_SetRenderDrawColor(rernderer, 80,80,80,SDL_ALPHA_OPAQUE);
+    SDL_RenderRect(rernderer, &(hold_ouline));
 
     SDL_FRect block = {
         .x = 0,
@@ -40,11 +39,11 @@ void render_hold_tetrimino(SDL_Renderer* rernderer, Tetris* tetris) {
         .w = TETRIMINO_ARRAY_BLOCK_SIZE,
     };
 
-    if (tetris -> hold_tetrimino.height_top == -100) {return;}
+    if (tetris -> hold_tetrimino.height_top == UINT8_MAX) {return;}
     Shape shape = tetris -> hold_tetrimino.shape;
     const Rotation_mask* rotation = &(all_shape_Tetrimino_State_Map[shape][tetris ->hold_tetrimino.tetrimino_state]);
     
-    SDL_SetRenderDrawColor(renderer, color_map[shape].r, color_map[shape].g, color_map[shape].b, SDL_ALPHA_OPAQUE);
+    SDL_SetRenderDrawColor(rernderer, color_map[shape].r, color_map[shape].g, color_map[shape].b, SDL_ALPHA_OPAQUE);
 
     int slot_height = HOLD_TETRIMINO_Y;
 
@@ -60,7 +59,7 @@ void render_hold_tetrimino(SDL_Renderer* rernderer, Tetris* tetris) {
                 block.x = HOLD_TETRIMINO_X + screen_col * TETRIMINO_ARRAY_BLOCK_SIZE;
                 block.y = slot_height + piece_row * TETRIMINO_ARRAY_BLOCK_SIZE;
 
-                SDL_RenderFillRect(renderer, &block);
+                SDL_RenderFillRect(rernderer, &block);
             }
         }
     }
@@ -172,33 +171,5 @@ void render_current_frame(SDL_Renderer* renderer, Tetris* tetris) {
         }
     }
 
-    Tetrimino* tetrimino = tetris->moving_tetrimino;
-    set_tetrimino_color(renderer, tetrimino->shape);
-
-    for (int piece_row = 0; piece_row < TETRIMINO_BOX_HEIGHT; piece_row++) {
-        uint16_t value_row = get_current_piece_row(tetrimino, piece_row);
-
-        if (value_row == 0) {
-            continue;
-        }
-
-        int board_row = tetrimino->height_top + piece_row;
-        int screen_row = board_row - HIDDEN_LAYER_SIZE;
-
-        if (screen_row < 0 || screen_row >= VISIBLE_HEIGHT) {
-            continue;
-        }
-
-        for (int bit_col = 0; bit_col < VISIBLE_WIDTH; bit_col++) {
-            if ((value_row & (1u << bit_col)) != 0) {
-                int screen_col = VISIBLE_WIDTH - 1 - bit_col;
-
-                square.x = BOARD_X + screen_col * BLOCK_SIZE;
-                square.y = BOARD_Y + screen_row * BLOCK_SIZE;
-
-                SDL_RenderFillRect(renderer, &square);
-            }
-        }
-    }
     return;
 }

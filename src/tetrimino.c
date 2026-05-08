@@ -12,6 +12,17 @@ Tetrimino* init_tetrimino(const Shape shape) {
     return tetrimino;
 }
 
+Tetrimino set_tetrimino(
+    Shape shape,
+    uint8_t x_right,
+    uint8_t height_top,
+    Tetrimino_State tetrimino_state) {
+    Tetrimino tetrimino = {.tetrimino_state = tetrimino_state, .shape = shape, .x_right = x_right, .height_top = height_top};
+
+    return tetrimino;
+}
+
+
 void free_tetrimino(Tetrimino* tetrimino) {
     free(tetrimino);
 }

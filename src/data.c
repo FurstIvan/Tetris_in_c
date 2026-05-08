@@ -19,15 +19,15 @@ Tetrimino_Color color_map[t_shape + 2] = {
 
 const Rotation_mask all_shape_Tetrimino_State_Map[t_shape + 1][Rotated_thrice +1] = { 
     [left_l_shape] = {
-        {
-            .rows = {
-                0b0001,
-                0b0001,
-                0b0011,
-                0b0000
-            },
-            .width = 2,
-            .height = 3
+        {                       // if i could i would redesign it like this:
+            .rows = {           // .rows  = {
+                0b0001,         // 0b0011
+                0b0001,         //   0011
+                0b0011,         //   0000
+                0b0000          //   0000    -> so we can fit one tetrimino rotation in 16 bit memory
+            },                                  // instead we use 32 bits
+            .width = 2,             // but its easier to use when i want to call a row i can just [row_id]
+            .height = 3             // instead of having a mask = 0b1111 and shifting it here and there and then using the & to get the data
         }, 
         {
             .rows = {

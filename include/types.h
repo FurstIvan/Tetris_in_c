@@ -69,8 +69,8 @@ struct Input{
 
 struct Board{            // board width is 16 but im only using 10 ig
     uint16_t* arr;
-    int height;
-    int width;
+    uint8_t height;
+    uint8_t width;
 } ;
 
 struct Tetrimino_Color {
@@ -80,8 +80,8 @@ struct Tetrimino_Color {
 };
 
 struct Tetrimino{
-    int height_top;            // where the top part of the tetrimino is
-    int x_right;               // the right side of the tetrimino x
+    uint8_t height_top;            // where the top part of the tetrimino is
+    uint8_t x_right;               // the right side of the tetrimino x
     Tetrimino_State tetrimino_state;
     Shape shape;
 } ;
@@ -110,7 +110,7 @@ struct Queue{
 struct Rotation_mask {
     uint8_t rows[4];
     uint8_t width;
-    int height;
+    uint8_t height;
 } ;
 
 #endif

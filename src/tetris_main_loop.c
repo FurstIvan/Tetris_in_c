@@ -1,8 +1,10 @@
-#include "sdl_app.h"
+#include "tetris_main_loop.h"
 #include "data.h"
 #include "input.h"
 #include "render.h"
 #include "game.h"
+#include "calculate_score.h"
+
 
 /*
 new render logic: 
@@ -24,6 +26,11 @@ when tetrimino drops:
 
 // implement adding to score at eacch line clear
 // better sdl3 visuals with textures instead of fill with collor
+
+
+
+// in the whole logic remove the human inpot
+
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
@@ -53,81 +60,48 @@ bool SDL_init() {
 
 void game_loop(Tetris *tetris)
 {
-    double previous_time = get_time();
-    double delta_time = 0.0;
-
-    uint8_t current_grav = 1;
-    
-    tetris -> grav = grav_ramp_states[current_grav];
-
-    Input_types last_input = TRAP;
-
     uint64_t last_score = 0;
 
-    SDL_Texture* score_texture = render_score_texture_creater(
-        renderer,
-        tetris,
-        tetris->asset
-    );
+    SDL_Texture* score_texture = render_score_texture_creater(renderer,tetris,tetris -> asset);
 
-    while (tetris->gs == INGAME) {
+    double algo_speed = ALGO_SPEED;
+
+    double last_algo_step = get_time();   
+
+    while (tetris -> gs == INGAME) {
 
         double now = get_time();
 
-        double frame_time = now - previous_time;
-        previous_time = now;
-
-        // just to make sure we dont update like crazy after one lag
-        if (frame_time > MAX_FRAME_TIME) {
-            frame_time = MAX_FRAME_TIME;
-        }
-
-        delta_time += frame_time;
-
-        if (tetris -> grav != END ) {
-            if (tetris -> score / SCORE_NEED_FOR_GRAV_RAMPING_UP >= current_grav) {
-                current_grav += 1;
-                tetris -> grav = grav_ramp_states[current_grav];
-            }
-        }
-
         SDL_Event event;
-
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
-                tetris->gs = LOST;
+                tetris -> gs = LOST;
             }
         }
 
-        const bool *keys = SDL_GetKeyboardState(NULL);
+        if (now - last_algo_step >= algo_speed) {
+            if (apply_best_board_for_shape_omp(tetris->locked_board,tetris->tetrimino_shape_queue->shapes[tetris->tetrimino_shape_queue->front])) {
+                clear_over_new(tetris);
+                
+                if (last_score != tetris -> score) {
+                    SDL_DestroyTexture(score_texture);
+
+                    score_texture = render_score_texture_creater(renderer, tetris, tetris -> asset);
+
+                    if (score_texture == NULL) {
+                        SDL_Log("Failed to create score texture: %s", SDL_GetError());
+                        exit(1);
+                    }
+
+                    last_score = tetris -> score;
+                }
     
-        Input_types current_input = input_mapper(keys);
-        if (current_input != last_input) {
-            input_handler(input_mapper(keys), tetris);
-        }
-        last_input = current_input;
-
-        double drop_interval = (double)tetris -> grav / 100.0;
-        while (delta_time >= drop_interval) {
-            update(tetris);
-            delta_time -= drop_interval;
-        }
-
-        if (last_score != tetris->score) {
-            SDL_DestroyTexture(score_texture);
-
-            score_texture = render_score_texture_creater(
-                renderer,
-                tetris,
-                tetris -> asset
-            );
-
-            if (score_texture == NULL) {
-                SDL_Log("Failed to create score texture: %s", SDL_GetError());
-                exit(1);
+            } 
+            else {
+                tetris -> gs = LOST;
             }
 
-            last_score = tetris -> score;
+            last_algo_step = now;
         }
 
         
@@ -143,19 +117,12 @@ void game_loop(Tetris *tetris)
 
         render_current_frame(renderer, tetris); 
         render_side_bar(renderer,tetris);
-        render_hold_tetrimino(renderer, tetris);
 
         SDL_RenderTexture(renderer, score_texture, NULL, &text_destination);
 
         SDL_RenderPresent(renderer);
 
         double frame_end = get_time();
-        double frame_duration = frame_end - now;
-        double remain_time = TARGET_FRAME_TIME - frame_duration;
-
-        if (remain_time > 0.0) {
-            SDL_Delay((Uint32)(remain_time * 1000.0));
-        }
     }
     if (tetris -> gs == LOST) { return; } 
     if (tetris -> gs == WON) { return; } 

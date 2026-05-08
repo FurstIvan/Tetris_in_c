@@ -1,5 +1,5 @@
 #include "game.h"
-#include "sdl_app.h"
+#include "tetris_main_loop.h"
 
 int main (void) {
     if (!SDL_init()) {

@@ -19,7 +19,7 @@ Tetris* init_game(){
     tetris -> locked_board = init_board(height);
     tetris -> score = 0;
     tetris -> input_buffer_speed = INPUT_BUFFER_SPEED;
-    tetris -> hold_tetrimino = (Tetrimino) {.height_top= -100};
+    tetris -> hold_tetrimino = (Tetrimino) {.height_top= UINT8_MAX};
     tetris -> played_hold = false;
     tetris -> asset = font_init();
 
@@ -38,6 +38,8 @@ Tetris* init_game(){
     return tetris;
 }
 
+
+
 void update(Tetris* tetris) {
     int next_top = tetris->moving_tetrimino->height_top+1;
     if (fall_collision(tetris, next_top)) {
@@ -48,7 +50,7 @@ void update(Tetris* tetris) {
 }
 
 void hold(Tetris* tetris) {
-    if (tetris -> hold_tetrimino.height_top == -100) {
+    if (tetris -> hold_tetrimino.height_top == UINT8_MAX) {
         tetris -> hold_tetrimino = *(tetris -> moving_tetrimino);
 
         tetris -> hold_tetrimino.tetrimino_state = Neutral;
@@ -106,6 +108,13 @@ void place_clear_over_new(Tetris* tetris) {
     place_tetrimino(tetris, new_height_top, tetris->moving_tetrimino -> x_right);
     line_clear_check(tetris);
     game_over_check(tetris);
+    get_new_tetrimino(tetris);
+}
+
+void clear_over_new(Tetris* tetris) {
+    int new_height_top = tetris->moving_tetrimino->height_top;
+    tetris ->played_hold = false;
+    line_clear_check(tetris);
     get_new_tetrimino(tetris);
 }
 

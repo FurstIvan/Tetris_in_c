@@ -77,3 +77,7 @@
 // think as in an array of row masks
 
 #endif
+
+#ifndef ALGO_SPEED
+#define ALGO_SPEED 0.1
+#endif
