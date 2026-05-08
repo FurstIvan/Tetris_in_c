@@ -1,4 +1,4 @@
-#include "sdl_app.h"
+#include "tetris_main_loop.h"
 #include "data.h"
 #include "input.h"
 #include "render.h"
@@ -64,11 +64,7 @@ void game_loop(Tetris *tetris)
 
     uint64_t last_score = 0;
 
-    SDL_Texture* score_texture = render_score_texture_creater(
-        renderer,
-        tetris,
-        tetris->asset
-    );
+    SDL_Texture* score_texture = render_score_texture_creater(renderer,tetris,tetris -> asset);
 
     while (tetris->gs == INGAME) {
 

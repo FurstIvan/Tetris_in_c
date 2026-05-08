@@ -19,7 +19,7 @@ add_executable(tetris
     input.c
     queue.c
     render.c
-    sdl_app.c
+    tetris_main_loop.c
     tetrimino.c
 )
 

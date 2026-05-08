@@ -1,7 +1,7 @@
 #include "render.h"
 #include "data.h"
 #include "tetrimino.h"
-#include "sdl_app.h"
+#include "tetris_main_loop.h"
 #include "assets.h"
 
 // current frame rendering is 480, 640 -> will stretch --> 10 block wide 
