@@ -68,6 +68,10 @@ void game_loop(Tetris *tetris)
 
     double last_algo_step = get_time();   
 
+    double time_per_step_running_average = 0.0;
+    size_t counter = 0;
+
+    fprintf(stdout, "thread_count: %d", omp_get_num_threads());
     while (tetris -> gs == INGAME) {
 
         double now = get_time();
@@ -104,6 +108,8 @@ void game_loop(Tetris *tetris)
             last_algo_step = now;
         }
 
+        double finish = get_time();
+
         
         SDL_FRect text_destination = {
             .x = SCORE_TEXT_X - (score_texture -> w / 2),
@@ -123,10 +129,16 @@ void game_loop(Tetris *tetris)
         SDL_RenderPresent(renderer);
 
         double frame_end = get_time();
+
+        counter++;
+        time_per_step_running_average = (time_per_step_running_average + (finish - now) ) / counter;
     }
+    fprintf(stdout, "running avg: %lf" , time_per_step_running_average);
     if (tetris -> gs == LOST) { return; } 
     if (tetris -> gs == WON) { return; } 
+
     exit(1); // you either lose or win but somehow got something else just quit
+    // nem tudsz nagyon nyerni lol
 }
 
 double get_time(void) {
