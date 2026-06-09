@@ -48,6 +48,7 @@ void line_clear(Board* board, int row) {
     }
 }
 
+
 static bool last_clear_tetris = false;
 
 void line_clear_check(Tetris* tetris) {

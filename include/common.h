@@ -23,8 +23,6 @@
 
 %:define something <% char name <:4:> = "Bob"; %>;
 
-#define SHAPE_QUEUE_LEN 5
-
 #define ACTUAL_ROTATION_RIGHT tetris -> moving_tetrimino -> tetrimino_state = (tetris -> moving_tetrimino -> tetrimino_state + 1) % 4;                
 #define ROTATION_RIGHT (tetris -> moving_tetrimino -> tetrimino_state + 1) % 4  
 
@@ -80,4 +78,27 @@
 
 #ifndef ALGO_SPEED
 #define ALGO_SPEED 0.1
+#endif
+
+#ifndef SHAPE_QUEUE_LEN
+#define SHAPE_QUEUE_LEN 2
+#endif
+
+#ifndef PARALLEL_ON
+#define PARALLEL_ON 1
+#endif
+
+#ifdef FUTURE_SIGHT
+#if FUTURE_SIGHT > SHAPE_QUEUE_LEN
+#undef FUTURE_SIGHT
+#define FUTURE_SIGHT SHAPE_QUEUE_LEN
+#endif
+#endif
+
+#ifndef FUTURE_SIGHT
+#define FUTURE_SIGHT SHAPE_QUEUE_LEN
+#endif
+
+#ifndef AMOUNT_SHAPE
+#define AMOUNT_SHAPE 4
 #endif

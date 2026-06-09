@@ -21,15 +21,11 @@ every frame:
 
 when tetrimino drops:
     change the rendering on of the tetriminos
-    otherwise keep ti
+    otherwise keep it
 */
 
 // implement adding to score at eacch line clear
 // better sdl3 visuals with textures instead of fill with collor
-
-
-
-// in the whole logic remove the human inpot
 
 
 SDL_Window* window = NULL;
@@ -60,6 +56,11 @@ bool SDL_init() {
 
 void game_loop(Tetris *tetris)
 {
+        
+    omp_set_num_threads(omp_get_max_threads());
+    
+    Board_tree* trunk = create_board_tree_from_current_board(tetris->locked_board,tetris -> tetrimino_shape_queue);
+
     uint64_t last_score = 0;
 
     SDL_Texture* score_texture = render_score_texture_creater(renderer,tetris,tetris -> asset);
@@ -71,7 +72,8 @@ void game_loop(Tetris *tetris)
     double time_per_step_running_average = 0.0;
     size_t counter = 0;
 
-    fprintf(stdout, "thread_count: %d", omp_get_num_threads());
+    double start_of_algorithm = 0;
+
     while (tetris -> gs == INGAME) {
 
         double now = get_time();
@@ -84,9 +86,17 @@ void game_loop(Tetris *tetris)
         }
 
         if (now - last_algo_step >= algo_speed) {
-            if (apply_best_board_for_shape_omp(tetris->locked_board,tetris->tetrimino_shape_queue->shapes[tetris->tetrimino_shape_queue->front])) {
-                clear_over_new(tetris);
-                
+
+            start_of_algorithm = get_time();
+
+            if (promote_best_child_to_root(trunk)) {
+                get_new_tetrimino(tetris);
+                copy_from_board_to_board(tetris->locked_board, trunk->trunk->this_node.board);
+                recalculcate_depths(trunk->trunk, 0);
+                extend_board_tree_to_full_depth(trunk, tetris->tetrimino_shape_queue);
+
+                tetris -> score +=  (trunk ->trunk ->this_node.lines_cleared) * 800;
+
                 if (last_score != tetris -> score) {
                     SDL_DestroyTexture(score_texture);
 
@@ -120,7 +130,6 @@ void game_loop(Tetris *tetris)
 
         SDL_SetRenderDrawColor(renderer,DEFAULT_COLOR,SDL_ALPHA_OPAQUE);
         SDL_RenderClear(renderer);
-
         render_current_frame(renderer, tetris); 
         render_side_bar(renderer,tetris);
 
@@ -131,15 +140,17 @@ void game_loop(Tetris *tetris)
         double frame_end = get_time();
 
         counter++;
-        time_per_step_running_average = (time_per_step_running_average + (finish - now) ) / counter;
+        time_per_step_running_average += ( (finish - start_of_algorithm) - time_per_step_running_average) / counter;
     }
     fprintf(stdout, "running avg: %lf" , time_per_step_running_average);
     if (tetris -> gs == LOST) { return; } 
     if (tetris -> gs == WON) { return; } 
 
     exit(1); // you either lose or win but somehow got something else just quit
-    // nem tudsz nagyon nyerni lol
+    // nyerés implementálás --> survive x pontig
 }
+
+
 
 double get_time(void) {
     return (double)SDL_GetPerformanceCounter() / (double)SDL_GetPerformanceFrequency();

@@ -4,6 +4,15 @@
 #include "tetrimino.h"
 #include "collision.h"
 
+typedef struct Shape_counter {
+    Shape type_of_shape;
+    uint8_t shape_count;
+}Shape_counter;
+
+static Shape_counter all_shapes_arr[t_shape + 1];
+
+static void better_random_enqueue(Queue*, uint8_t);
+
 Tetris* init_game(){
     Gravity grav = 0;
     int height = VISIBLE_HEIGHT + HIDDEN_LAYER_SIZE;
@@ -29,16 +38,37 @@ Tetris* init_game(){
     tetris -> moving_tetrimino = init_tetrimino(shape);
     Queue* que_ptr = tetris -> tetrimino_shape_queue;
 
+    for (uint8_t j = 0; j <= t_shape; j++) {
+        all_shapes_arr[j] = (Shape_counter){.shape_count = AMOUNT_SHAPE, .type_of_shape=(Shape)j};
+    }
+
     for (int i = 0; i < SHAPE_QUEUE_LEN; i++) {
-        Shape random_shape = rand() % (t_shape + 1);
-        enqueue(que_ptr, random_shape);
+        uint8_t random_shape_index = rand() % (t_shape + 1);
+        better_random_enqueue(que_ptr, random_shape_index);
+        
     }
     print_queue(que_ptr);
 
     return tetris;
 }
 
+static void better_random_enqueue(Queue* q_ptr, uint8_t shape_idx) {
+    if (all_shapes_arr[shape_idx].shape_count) {
+            all_shapes_arr[shape_idx].shape_count -= 1;
+            enqueue(q_ptr, (Shape)shape_idx);
+        } else {
 
+            for (uint8_t shape_index_helper = shape_idx + 1; (shape_index_helper % t_shape + 1) != shape_idx; shape_index_helper++) {
+                uint8_t index = shape_index_helper % t_shape + 1;
+                if (all_shapes_arr[index].shape_count) {
+                    all_shapes_arr[index].shape_count -= 1;
+                    enqueue(q_ptr, (Shape)index);
+                    break;
+                }
+            }
+        }
+    return;
+}
 
 void update(Tetris* tetris) {
     int next_top = tetris->moving_tetrimino->height_top+1;
@@ -86,19 +116,15 @@ void place_tetrimino(Tetris* tetris, int height_top, int left) {
 void get_new_tetrimino(Tetris* tetris) {
     Tetrimino* tetrimino = tetris -> moving_tetrimino;
     tetrimino -> shape = dequeue(tetris -> tetrimino_shape_queue);
-
-    if (tetrimino -> shape == -1) {
-        tetris -> gs = LOST; 
-        return;
-    }
+    all_shapes_arr[tetrimino->shape].shape_count += 1;
 
     tetrimino -> height_top = 0;
     tetrimino -> x_right = 5; 
     tetrimino -> tetrimino_state = Neutral;
 
-    Shape random_shape = rand() % (t_shape + 1);
-    enqueue(tetris -> tetrimino_shape_queue, random_shape);
-
+    uint8_t random_shape_index = rand() % (t_shape + 1);
+    better_random_enqueue(tetris -> tetrimino_shape_queue, random_shape_index);
+    
     return;
 }
 
