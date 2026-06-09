@@ -7,11 +7,11 @@ void init_queue(Queue* q) {
     q -> size = 0;
 }
 
-void free_queue(Queue* q) { 
+void free_queue(Queue* q) {
     free(q);
 }
 
-bool is_empty(Queue* q) { 
+bool is_empty(Queue* q) {
     return q->size == 0;
 }
 
@@ -26,9 +26,9 @@ void enqueue(Queue* q, Shape shape) {
         printf("Queue is full\n");
         return;
     }
-    q->shapes[q->rear] = shape;
+    q -> shapes[q->rear] = shape;
     q -> rear = (++q->rear) % q->lenght;
-    q->size++;
+    q -> size++;
     return;
 }
 
@@ -38,7 +38,7 @@ Shape dequeue(Queue* q) {
         printf("Queue is empty\n");
         return -1;
     }
-    
+
     Shape shape = q->shapes[q->front];
     q->front = (++q->front) % q -> lenght;
     q->size--;

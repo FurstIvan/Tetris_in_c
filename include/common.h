@@ -59,7 +59,7 @@
 
 #define NEXT_TETRIMINO_ARRAY_X BOARD_X + (10 * BLOCK_SIZE) + 20
 #define NEXT_TETRIMINO_ARRAY_Y BOARD_Y 
-#define TETRIMINO_ARRAY_BLOCK_SIZE BLOCK_SIZE / TETRIMINO_BOX_HEIGHT //we need to make each tetrimino 4 times smaller so it fits
+#define TETRIMINO_ARRAY_BLOCK_SIZE BLOCK_SIZE / TETRIMINO_BOX_HEIGHT // need to make each tetrimino 4 times smaller so it fits
 
 #define HOLD_TETRIMINO_X BOARD_X - (1 * BLOCK_SIZE) - 20
 #define HOLD_TETRIMINO_Y BOARD_Y 
@@ -73,7 +73,5 @@
 #define SCORE_TEXT_Y BOARD_Y - 50
 
 // macros in the future #define TYPE_OF_INT uint_ ## (HIDDEN_WIDTH + VISIBLE_WIDTH)
-
-// think as in an array of row masks
 
 #endif

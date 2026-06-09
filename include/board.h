@@ -9,5 +9,6 @@ Board* init_board(int);
 void line_clear_check(Tetris*); 
 void line_clear(Board*, int);
 void free_board(Board*);
+void calculate_hard_Drop_Board(Tetris*);
 
 #endif

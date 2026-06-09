@@ -9,4 +9,7 @@ void set_tetrimino_color(SDL_Renderer*, Shape);
 void render_side_bar(SDL_Renderer*, Tetris*);
 void render_hold_tetrimino(SDL_Renderer*, Tetris*);
 SDL_Texture* render_score_texture_creater(SDL_Renderer*, Tetris*, Assets*); 
+
+
+
 #endif

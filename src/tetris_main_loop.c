@@ -3,6 +3,7 @@
 #include "input.h"
 #include "render.h"
 #include "game.h"
+#include "board.h"
 
 /*
 new render logic: 
@@ -66,6 +67,8 @@ void game_loop(Tetris *tetris)
 
     SDL_Texture* score_texture = render_score_texture_creater(renderer,tetris,tetris -> asset);
 
+
+    calculate_hard_Drop_Board(tetris);
     while (tetris->gs == INGAME) {
 
         double now = get_time();
@@ -98,6 +101,11 @@ void game_loop(Tetris *tetris)
         const bool *keys = SDL_GetKeyboardState(NULL);
     
         Input_types current_input = input_mapper(keys);
+
+        if (current_input == MOV_LEFT || current_input == MOV_RIGHT || current_input == ROTATE_LEFT || current_input == ROTATE_RIGHT) {
+            calculate_hard_Drop_Board(tetris); // if we move tetrimino we calculate
+        }
+
         if (current_input != last_input) {
             input_handler(input_mapper(keys), tetris);
         }
@@ -124,6 +132,8 @@ void game_loop(Tetris *tetris)
             }
 
             last_score = tetris -> score;
+
+            calculate_hard_Drop_Board(tetris);
         }
 
         

@@ -97,6 +97,7 @@ struct Tetris{
     Tetrimino hold_tetrimino;
     bool played_hold;
     Assets* asset;
+    Board* hard_drop_board;
 } ; 
 
 struct Queue{
